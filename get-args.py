@@ -26,7 +26,7 @@ def get_all_args() -> List[Category]:
     response = requests.get("https://docs.earthly.dev/docs/earthfile/builtin-args")
     if response.status_code != 200:
         raise Exception(f"fetch build-in args page failed with status code: {response.status_code}")
-    parser = bs4.BeautifulSoup(response.text)
+    parser = bs4.BeautifulSoup(response.text, features="html.parser")
     category_tags = parser.find_all("h3")
     table_tags = parser.find_all("table")
     if len(category_tags) != len(table_tags):
@@ -34,6 +34,7 @@ def get_all_args() -> List[Category]:
     categories: List[Category] = []
     for category_tag, table_tag in zip(category_tags, table_tags):
         category = Category(name=category_tag.text.strip())
+        print(f"found a new category: {category.name}")
         table_body = table_tag.find("tbody")
         if table_body is None:
             raise Exception("<tbody> element not found (category: {category})")
@@ -46,6 +47,7 @@ def get_all_args() -> List[Category]:
             arg_example_value = tds[2].text.strip()
             arg = Arg(arg_name, arg_description, arg_example_value)
             category.args.append(arg)
+            print(f"found a new ARG: {arg.name}")
         categories.append(category)
     return categories
 
@@ -63,6 +65,8 @@ def gen_earthfile(categories: List[Category]) -> None:
             buf.write(f"    RUN echo \"{arg.name}'s value is: ${arg.name}\" >> args.txt\n")
     buf.write("    SAVE ARTIFACT args.txt AS LOCAL args.txt\n")
     s = buf.getvalue()
+    print("generated Earthfile content is: ")
+    print(s)
     open("Earthfile", "w").write(s)
 
 
