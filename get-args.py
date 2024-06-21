@@ -63,7 +63,7 @@ def gen_earthfile(categories: List[Category]) -> None:
             buf.write(f"    RUN echo \"{arg.name}'s value is: ${arg.name}\" >> args.txt\n")
     buf.write("    SAVE ARTIFACT args.txt AS LOCAL args.txt\n")
     s = buf.getvalue()
-    open("Earthfile.args", "w").write(s)
+    open("Earthfile", "w").write(s)
 
 
 if __name__ == '__main__':
