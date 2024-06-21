@@ -26,6 +26,8 @@ def get_all_args() -> List[Category]:
     response = requests.get("https://docs.earthly.dev/docs/earthfile/builtin-args")
     if response.status_code != 200:
         raise Exception(f"fetch build-in args page failed with status code: {response.status_code}")
+    print("response body of the built-in args page is: ")
+    print(response.text)
     parser = bs4.BeautifulSoup(response.text, features="html.parser")
     category_tags = parser.find_all("h3")
     table_tags = parser.find_all("table")
