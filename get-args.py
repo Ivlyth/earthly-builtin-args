@@ -1,6 +1,7 @@
 import bs4
 import requests
 from typing import List
+from datetime import datetime
 
 
 class Category:
@@ -26,8 +27,7 @@ def get_all_args() -> List[Category]:
     response = requests.get("https://docs.earthly.dev/docs/earthfile/builtin-args")
     if response.status_code != 200:
         raise Exception(f"fetch build-in args page failed with status code: {response.status_code}")
-    print("response body of the built-in args page is: ")
-    print(response.text)
+    open("builtin-args.html", "w").write(response.text)  # save response body for debug
     parser = bs4.BeautifulSoup(response.text, features="html.parser")
     category_tags = parser.find_all("h3")
     table_tags = parser.find_all("table")
@@ -36,7 +36,8 @@ def get_all_args() -> List[Category]:
     categories: List[Category] = []
     for category_tag, table_tag in zip(category_tags, table_tags):
         category = Category(name=category_tag.text.strip())
-        print(f"found a new category: {category.name}")
+        if category.name == "":
+            raise Exception(f"empty category name: {category_tag}")
         table_body = table_tag.find("tbody")
         if table_body is None:
             raise Exception("<tbody> element not found (category: {category})")
@@ -48,8 +49,9 @@ def get_all_args() -> List[Category]:
             arg_description = tds[1].text.strip()
             arg_example_value = tds[2].text.strip()
             arg = Arg(arg_name, arg_description, arg_example_value)
+            if arg.name == "":
+                raise Exception(f"empty arg name: {tds[0]}")
             category.args.append(arg)
-            print(f"found a new ARG: {arg.name}")
         categories.append(category)
     return categories
 
@@ -57,18 +59,21 @@ def get_all_args() -> List[Category]:
 def gen_earthfile(categories: List[Category]) -> None:
     from io import StringIO
     buf = StringIO()
+    utcnow = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    buf.write(f"# GENERATE AT {utcnow}\n")
     buf.write("VERSION 0.8\n")
     buf.write("FROM alpine:latest\n\n")
     buf.write("echo:\n")
+    buf.write("    ARG output=builtin-args.md\n")
     for category in categories:
-        buf.write(f"    RUN echo \"# Category: {category.name}\" \n")
+        buf.write(f"    RUN echo \"## Category: {category.name}\" >> $output\n")
+        buf.write(f"    RUN echo \"| ARG Name | ARG Value |\" >> $output\n")
+        buf.write(f"    RUN echo \"|----------|-----------|\" >> $output\n")
         for index, arg in enumerate(category.args):
             buf.write(f"    ARG {arg.name}\n")
-            buf.write(f"    RUN echo \"{arg.name}'s value is: ${arg.name}\" >> args.txt\n")
-    buf.write("    SAVE ARTIFACT args.txt AS LOCAL args.txt\n")
+            buf.write(f"    RUN echo \"| {arg.name} | ${arg.name} |\" >> $output\n")
+    buf.write("    SAVE ARTIFACT $output AS LOCAL $output\n")
     s = buf.getvalue()
-    print("generated Earthfile content is: ")
-    print(s)
     open("Earthfile", "w").write(s)
 
 
