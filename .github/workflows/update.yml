@@ -20,6 +20,10 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: python3 get-args.py
+      - uses: earthly/actions-setup@v1
+        with:
+          version: v0.8.0
+      - run: earthly +echo
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: update Earthfile
