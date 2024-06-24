@@ -3,6 +3,6 @@
 
 你也可以通过在你本地运行如下命令来查看所有内置参数基于你本地项目/环境的实际值:
 
-> `earthly github.com/Ivlyth/earthly-builtin-args+echo`
+> `curl -sSo Earthfile https://raw.githubusercontent.com/Ivlyth/earthly-builtin-args/main/Earthfile && earthly +echo`
 
 运行结束后，查看本地的 `builtin-args.md` 文件内容即可

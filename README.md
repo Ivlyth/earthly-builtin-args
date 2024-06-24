@@ -4,6 +4,6 @@ This project uses GitHub Actions to periodically update all [builtin arguments](
 
 You can also view the actual values of all builtin arguments based on your local project/environment by running the following command locally:
 
-> `earthly github.com/Ivlyth/earthly-builtin-args+echo`
+> `curl -sSo Earthfile https://raw.githubusercontent.com/Ivlyth/earthly-builtin-args/main/Earthfile && earthly +echo`
 
 After the command completes, check the content of the local `builtin-args.md` file.
